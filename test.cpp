@@ -5,7 +5,7 @@
 
 int main(int argc, const char* argv[])
 {
-  // 画像データをファイル（この例では「lena.jpg」）から読み込む
+  // 画像データをファイル（この例では「lena_std.tif」）から読み込む
   cv::Mat src = cv::imread("lena_std.tif", cv::IMREAD_COLOR);
 	printf("width=%d,height=%d,step=%ld\n",src.cols,src.rows,(unsigned long)src.step);
 	printf("img addres=%p\n",src.data);
