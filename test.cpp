@@ -6,10 +6,10 @@
 int main(int argc, const char* argv[])
 {
   // 画像データをファイル（この例では「lena.jpg」）から読み込む
-  cv::Mat src = cv::imread("lena.jpg", cv::IMREAD_COLOR);
-	printf("%d,%d,%d\n",src.cols,src.rows,src.step);
-	printf("%p\n",src.data);
-	printf("%p,%p,%d\n",src.datastart,src.dataend,src.dataend-src.datastart);
+  cv::Mat src = cv::imread("lena_std.tif", cv::IMREAD_COLOR);
+	printf("width=%d,height=%d,step=%ld\n",src.cols,src.rows,(unsigned long)src.step);
+	printf("img addres=%p\n",src.data);
+	printf("%p,%p,%ld\n",src.datastart,src.dataend,src.dataend-src.datastart);
 	printf("%d\n",src.data[0]);
 	short i,j;
 	for (i=0;i<src.rows;i++){
