@@ -1,61 +1,57 @@
+#include <stdio.h>
 #include <iostream>
-#include <vector>
+#include "opencv2/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/features2d.hpp"
+#include "opencv2/xfeatures2d.hpp"
+#include "opencv2/highgui.hpp"
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/xfeatures2d.hpp>
-
+using namespace cv;
+using namespace cv::xfeatures2d;
+/* @function main */
 int main()
 {
-  cv::VideoCapture cap(0);//デバイスのオープン
-  //cap.set(CV_CAP_PROP_FRAME_WIDTH,1920);
-  //cap.set(CV_CAP_PROP_FRAME_HEIGHT,1080);
-	
-
-  if(!cap.isOpened())//カメラデバイスが正常にオープンしたか確認．
-  {
-    //読み込みに失敗したときの処理
-    return -1;
+  Mat img_1 = imread("lena_std.tif", IMREAD_GRAYSCALE );
+  Mat img_2 = imread("lena_std.tif", IMREAD_GRAYSCALE );
+  if( !img_1.data || !img_2.data )
+  { 
+    std::cout<< " --(!) Error reading images " << std::endl; return -1; 
   }
-  cv::xfeatures2d::initModule_xfeatures2d();
-  cv::Ptr<cv::FeatureDetector> detector = cv::FeatureDetector::create("SURF");
-  cv::Ptr<cv::DescriptorExtractor> extractor = cv::DescriptorExtractor::create("SURF");
 
-
-  while(1)//無限ループ
-  {
-    cv::Mat frame;
-    std::vector<cv::KeyPoint> keypoints;
-    cv::Mat descriptor;
-
-
-
-    cap >> frame; // get a new frame from camera
-
-    //
-    //取得したフレーム画像に対して，クレースケール変換や2値化などの処理を書き込む．
-    //
-
-    detector->detect(frame, keypoints);
-    extractor->compute(frame, keypoints, descriptor);
-    cv::Mat output;
-    cv::drawKeypoints(frame, keypoints, output);
+  // 回転： -40 [deg],  スケーリング： 1.0 [倍]
+  float angle = -40.0, scale = 1.0;
+  //     // 中心：画像中心
+  Point2f center(img_2.cols*0.5, img_2.rows*0.5);
+  // 以上の条件から2次元の回転行列を計算
+  const Mat affine_matrix = getRotationMatrix2D( center, angle, scale );
+  //アフィン変換
+  Mat dst_img;
+  warpAffine(img_2, dst_img, affine_matrix, img_2.size());
 
 
 
-    cv::imshow("window", output);//画像を表示．
-
-    int key = cv::waitKey(1);
+  //-- Step 1: Detect the keypoints using SURF Detector
+  int minHessian = 2500;
+  Ptr<SURF> detector = SURF::create( minHessian );
+  std::vector<KeyPoint> keypoints_1, keypoints_2;
+  detector->detect( img_1, keypoints_1 );
+  detector->detect( dst_img, keypoints_2 );
+  
+  //-- Draw keypoints
+  Mat img_keypoints_1; Mat img_keypoints_2;
+  drawKeypoints( img_1, keypoints_1, img_keypoints_1, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
+  drawKeypoints( dst_img, keypoints_2, img_keypoints_2, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
+  
+  //-- Show detected (drawn) keypoints
+  imshow("Keypoints 1", img_keypoints_1 );
+  imshow("Keypoints 2", img_keypoints_2 );
+  
+  while(1){
+    int key = waitKey(1);
     if(key == 113)//qボタンが押されたとき
     {
-      break;//whileループから抜ける．
-    }
-    else if(key == 115)//sが押されたとき
-    {
-      //フレーム画像を保存する．
-      cv::imwrite("img.png", frame);
+      return 0;
     }
   }
-  cv::destroyAllWindows();
   return 0;
 }

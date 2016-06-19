@@ -6,3 +6,9 @@ usbcam:usbcam.cpp Makefile
 
 surftest:surf.cpp Makefile
 	g++ -o surftest surf.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+surfmovie:surfmovie.cpp Makefile
+	g++ -o surfmovie surfmovie.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+siftmovie:siftmovie.cpp Makefile
+	g++ -o siftmovie siftmovie.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
