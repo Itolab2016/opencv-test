@@ -12,3 +12,6 @@ surfmovie:surfmovie.cpp Makefile
 
 siftmovie:siftmovie.cpp Makefile
 	g++ -o siftmovie siftmovie.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+chess:chess.cpp
+	g++ -o chess chess.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
