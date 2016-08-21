@@ -14,7 +14,7 @@ int main(int argc, const char* argv[])
 	short i,j;
 	for (i=0;i<src.rows;i++){
 		for (j=0;j<src.cols;j++){
-			src.data[i*src.step+j*3+1]=255;
+			//src.data[i*src.step+j*3+1]=255;
 		}
 	}
 
@@ -28,7 +28,7 @@ int main(int argc, const char* argv[])
 
   cv::namedWindow("image", cv::WINDOW_AUTOSIZE);
   cv::imshow("image", src);
-  cv::waitKey(0);
+  cv::waitKey();
   cv::destroyAllWindows();
 
   return 0;

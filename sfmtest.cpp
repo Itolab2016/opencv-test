@@ -12,6 +12,41 @@ using namespace cv::xfeatures2d;
 /* @function main */
 int main()
 {
+  // Example. Estimation of fundamental matrix using the RANSAC algorithm
+  int point_count = 100;
+  vector<Point2f> points1(point_count);
+  vector<Point2f> points2(point_count);
+  vector<Point3f> point3d1(point_count);
+  vector<Point3f> point3d2(point_count);
+  Mat K = (Mat_<float>(3,3) << 1, 0, 320, 0, 1, 240, 0, 0, 1);
+  float tx=1,ty=0,tz=0;
+  Mat R1 = (Mat_<float>(3,4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
+  Mat R2 = (Mat_<float>(3,4) << 1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1 );
+
+  cout << K << endl;
+  cout << R1 << endl;
+  cout << K*R2 << endl;
+
+
+
+#if 0
+  // initialize the points here ... */
+  for( int i = 0; i < point_count; i++ )
+  {
+    points1[i] = ...;
+    points2[i] = ...;
+  }
+
+  double focal = 1.0;
+  cv::Point2d pp(0.0, 0.0);
+  Mat E, R, t, mask;
+
+  E = findEssentialMat(points1, points2, focal, pp, RANSAC, 0.999, 1.0, mask);
+  recoverPose(E, points1, points2, R, t, focal, pp, mask);
+
+
+///////////////////////////////
+
   Mat img_1 = imread("lena_std.tif", IMREAD_GRAYSCALE );
   Mat img_2 = imread("lena_std.tif", IMREAD_GRAYSCALE );
   if( !img_1.data || !img_2.data )
@@ -57,4 +92,5 @@ int main()
     }
   }
   return 0;
+#endif 
 }
