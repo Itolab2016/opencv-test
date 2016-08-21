@@ -5,6 +5,7 @@
 #include "opencv2/features2d.hpp"
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/calib3d.hpp"
 
 using namespace std;
 using namespace cv;
@@ -13,21 +14,48 @@ using namespace cv::xfeatures2d;
 int main()
 {
   // Example. Estimation of fundamental matrix using the RANSAC algorithm
-  int point_count = 100;
+  int point_count = 3;
   vector<Point2f> points1(point_count);
   vector<Point2f> points2(point_count);
   vector<Point3f> point3d1(point_count);
   vector<Point3f> point3d2(point_count);
   Mat K = (Mat_<float>(3,3) << 1, 0, 320, 0, 1, 240, 0, 0, 1);
   float tx=1,ty=0,tz=0;
-  Mat R1 = (Mat_<float>(3,4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
-  Mat R2 = (Mat_<float>(3,4) << 1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1 );
+  Mat R1 = (Mat_<float>(3,3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+  Mat R2 = (Mat_<float>(3,3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
 
+  Mat t1 = (Mat_<float>(3,1) << 0, 0, 0);
+  Mat t2 = (Mat_<float>(3,1) << 1, 0, 0);
+
+  Mat E1 = (Mat_<float>(3,4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
+  Mat E2 = (Mat_<float>(3,4) << 1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1 );
+  Mat img = Mat(480,640,CV_8UC3);
   cout << K << endl;
-  cout << R1 << endl;
-  cout << K*R2 << endl;
+  cout << E1 << endl;
+  cout << K*E2 << endl;
+
+  point3d1[0]=Point3f(0,0,2);
+  point3d1[1]=Point3f( 100, 100, 2);
+  point3d1[2]=Point3f(-100,-200, 3);
+  
+  for(int i=0;i<point_count;i++){
+    cout << point3d1[i] << endl;
+  }
+
+  Mat r1,distcoeffs,outp;
+  Rodrigues(R1,r1);
+  projectPoints(point3d1, r1, t1, K, distcoeffs, outp );
+  cout << "Poject point=" << outp << endl;
 
 
+  for(int i=0; i<point_count; i++){
+    circle(img, Point(outp.at<float>(i,0),outp.at<float>(i,1)), 5, CV_RGB(255,0,0));
+  }
+  flip(img,img,0);
+  cv::namedWindow("image", cv::WINDOW_AUTOSIZE);
+  cv::imshow("image", img);
+  cv::waitKey();
+  cv::destroyAllWindows();
 
 #if 0
   // initialize the points here ... */

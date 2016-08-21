@@ -15,3 +15,6 @@ siftmovie:siftmovie.cpp Makefile
 
 chess:chess.cpp
 	g++ -o chess chess.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+sfmtest:sfmtest.cpp Makefile
+	g++ -o sfmtest sfmtest.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
