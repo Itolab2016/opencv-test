@@ -1,5 +1,5 @@
 #include "opencv2/opencv.hpp"
-
+#include <stdio.h>
 
 int main()
 {
@@ -14,6 +14,9 @@ int main()
     return -1;
   }
 
+  int count=0;
+  char str[20];
+
   while(1)//無限ループ
   {
     cv::Mat frame;
@@ -22,11 +25,11 @@ int main()
     //
     //取得したフレーム画像に対して，クレースケール変換や2値化などの処理を書き込む．
     //
-    for (int i=0;i<frame.rows;i++){
-      for (int j=0;j<frame.cols;j++){
+    //for (int i=0;i<frame.rows;i++){
+    //  for (int j=0;j<frame.cols;j++){
         //frame.data[i*frame.step+j*3+1]=255;
-      }
-    }
+    //  }
+    //}
 
     cv::imshow("window", frame);//画像を表示．
 
@@ -40,6 +43,8 @@ int main()
       //フレーム画像を保存する．
       cv::imwrite("img.png", frame);
     }
+    sprintf(str,"img/img%04d.png",count++);
+    cv::imwrite(str, frame);
   }
   cv::destroyAllWindows();
   return 0;
