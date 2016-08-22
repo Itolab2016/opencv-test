@@ -18,3 +18,6 @@ chess:chess.cpp
 
 sfmtest:sfmtest.cpp Makefile
 	g++ -o sfmtest sfmtest.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+opticlflow:opticalflow.cpp Makefile
+	g++ -o opticalflow opticalflow.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
