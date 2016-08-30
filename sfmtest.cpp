@@ -1,3 +1,8 @@
+//三次元復元研究用プログラム
+//乱数で人工的に点群を作成し，平面に透視投影し
+//２枚の透視投影画像から回転量と移動量を求める（２０１６．８．３０）
+//
+//２枚の画像から３次元点を復元する
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -15,10 +20,8 @@ using namespace cv;
 using namespace cv::xfeatures2d;
 /* @function main */
 
-
 class my3dpoint{
   double x,y,z;
-
 
 public:
 
@@ -37,13 +40,7 @@ my3dpoint::my3dpoint(){
   x=((rand()-harf)/harf)*100.0;
   y=((rand()-harf)/harf)*200.0;
   z=300.0+((double)rand()/RAND_MAX)*500.0;
-
-
 }
-
-
-
-
 
 int main()
 {
@@ -98,8 +95,21 @@ int main()
 
   recoverPose(E,points1,points2,R,t,300.0,Point2d(0,0));
 
-  //再投影
+  //求めたRtを用いて再投影
   projectPoints(point3d1,R,scale*t,K,distcoef,points3);
+
+  //３次元復元
+  //triangulatePoints(InputArray projMatr1, InputArray projMatr2, InputArray projPoints1, InputArray projPoints2, OutputArray points4D);
+
+  //投影行列の作成
+  Mat M1(3,4,CV_32F);
+  Mat M2(3,4,CV_32F);
+  Mat T1(3,1,CV_32F);
+  Mat T2(3,1,CV_32F);
+
+  M1.at<float>(0,0)=731;
+
+  cout <<"M1=" << M1 << endl;
 
   //ファイルに記録
   ofstream fp2dv1(file2dv1);
