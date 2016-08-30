@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -10,8 +11,40 @@ using namespace std;
 using namespace cv;
 using namespace cv::xfeatures2d;
 /* @function main */
+
+
+class my3dpoint{
+  double x,y,z;
+
+
+public:
+
+  my3dpoint();
+
+  double getX(){return x;}
+  double getY(){return y;}
+  double getZ(){return z;}
+  void disp(){cout<<"["<<x<<","<<y<<","<<z<<"]"<<std::endl;}
+  void dispnobr(){cout<<x<<" "<<y<<" "<<z<<std::endl;}
+
+};
+
+my3dpoint::my3dpoint(){
+  double harf=RAND_MAX/2.0;
+  x=((rand()-harf)/harf)*10.0;
+  y=((rand()-harf)/harf)*10.0;
+  z=((rand()-harf)/harf)*10.0;
+
+}
+
+
+
+
+
 int main()
 {
+
+  my3dpoint p1[100];
   // Example. Estimation of fundamental matrix using the RANSAC algorithm
   int point_count = 100;
   vector<Point2f> points1(point_count);
@@ -23,11 +56,12 @@ int main()
   Mat R1 = (Mat_<float>(3,4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
   Mat R2 = (Mat_<float>(3,4) << 1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1 );
 
-  cout << K << endl;
-  cout << R1 << endl;
-  cout << K*R2 << endl;
-
-
+//  cout << K << endl;
+//  cout << R1 << endl;
+//  cout << K*R2 << endl;
+  for (int i=0;i<100;i++){
+    p1[i].dispnobr();
+  }
 
 #if 0
   // initialize the points here ... */
