@@ -78,7 +78,7 @@ int main()
   Mat rvec1=(Mat_<float>(3,1)<<0,0,0);
   Mat rvec2=(Mat_<float>(3,1)<<rx,ry,rz);
 
-  float tx=0,ty=0,tz=0;
+  float tx=1000,ty=0,tz=0;
   float scale=sqrt(tx*tx+ty*ty+tz*tz);
   Mat tvec1=(Mat_<float>(3,1)<<0,0,0);
   Mat tvec2=(Mat_<float>(3,1)<<tx,ty,tz);
@@ -104,13 +104,38 @@ int main()
   //投影行列の作成
   Mat M1(3,4,CV_32F);
   Mat M2(3,4,CV_32F);
+  Mat R1(3,3,CV_32F);
+  Mat R2(3,3,CV_32F);
   Mat T1(3,1,CV_32F);
   Mat T2(3,1,CV_32F);
 
-  M1.at<float>(0,0)=731;
+
+  Rodrigues(rvec1,R1);  
+  t=scale*t;
+
+  for (int m=0; m<3;m++){
+    for (int n=0; n<4; n++){
+      if(n==3){
+        M1.at<float>(m,n)=tvec1.at<float>(m,0);
+        M2.at<float>(m,n)=t.at<double>(m,0);
+
+      }
+      else {
+        M1.at<float>(m,n)=R1.at<float>(m,n);
+        M2.at<float>(m,n)=R.at<double>(m,n);
+      }
+
+    }
+  }
 
   cout <<"M1=" << M1 << endl;
+  cout <<"R1=" << R1 << endl;
+  cout <<"tvec1="<<tvec1<< endl;
 
+  cout <<"M2=" << M2 << endl;
+  cout <<"R=" << R << endl;
+  cout <<"t="<< t << endl;
+  
   //ファイルに記録
   ofstream fp2dv1(file2dv1);
   ofstream fp2dv2(file2dv2);
@@ -126,10 +151,10 @@ int main()
 
 
 
-  Mat R2;
-  Rodrigues(rvec2,R2);  
-  cout << "R=" << R <<endl<<endl;
-  cout << "R2=" << R2 <<endl<<endl;
+  //Mat R2;
+  //Rodrigues(rvec2,R2);  
+  //cout << "R=" << R <<endl<<endl;
+  //cout << "R2=" << R2 <<endl<<endl;
 
   //cout << "rvec=" << rvec << endl <<endl;
   //printf("Rvec=[%8.3f,%8.3f,%8.3f]\n",rvec.at<double>(0,0),rvec.at<double>(1,0),rvec.at<double>(2,0));
