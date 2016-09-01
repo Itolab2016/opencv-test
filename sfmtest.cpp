@@ -46,7 +46,7 @@ int main()
 {
 
   // Example. Estimation of fundamental matrix using the RANSAC algorithm
-  int point_count = 1000;
+  int point_count = 10;
 
   char file2dv1[20]="test2dv1.dat";
   char file2dv2[20]="test2dv2.dat";
@@ -58,7 +58,9 @@ int main()
   vector<Point2f> points2;
   vector<Point2f> points3;
   vector<Point3f> point3d1(point_count);
-  vector<Point3f> point3d2(point_count);
+//  vector<Point3f> point3d2(point_count);
+  Mat points4d;
+  Mat points3d;
   float fx=300.0;
   float fy=300.0;
   float cx=0.0;
@@ -74,7 +76,7 @@ int main()
   //cout << point3d1 << endl;
   
   
-  float rx=0.0,ry=0.0,rz=3.14159*20/180;
+  float rx=0.0,ry=0*10.0*3.14159/180,rz=0.0;
   Mat rvec1=(Mat_<float>(3,1)<<0,0,0);
   Mat rvec2=(Mat_<float>(3,1)<<rx,ry,rz);
 
@@ -109,7 +111,6 @@ int main()
   Mat T1(3,1,CV_32F);
   Mat T2(3,1,CV_32F);
 
-
   Rodrigues(rvec1,R1);  
   t=scale*t;
 
@@ -118,13 +119,11 @@ int main()
       if(n==3){
         M1.at<float>(m,n)=tvec1.at<float>(m,0);
         M2.at<float>(m,n)=t.at<double>(m,0);
-
       }
       else {
         M1.at<float>(m,n)=R1.at<float>(m,n);
         M2.at<float>(m,n)=R.at<double>(m,n);
       }
-
     }
   }
 
@@ -136,6 +135,14 @@ int main()
   cout <<"R=" << R << endl;
   cout <<"t="<< t << endl;
   
+  //三角法で３次元復元  
+  triangulatePoints(M1, M2, points1, points2, points4d);
+  convertPointsFromHomogeneous(points4d.t(),points3d);
+  //cout<<points4d.col(0).reshape(4.1)<<endl;
+  cout<<(points4d.t())<<endl<<endl;
+  cout<<points3d<<endl;
+
+
   //ファイルに記録
   ofstream fp2dv1(file2dv1);
   ofstream fp2dv2(file2dv2);
@@ -159,7 +166,7 @@ int main()
   //cout << "rvec=" << rvec << endl <<endl;
   //printf("Rvec=[%8.3f,%8.3f,%8.3f]\n",rvec.at<double>(0,0),rvec.at<double>(1,0),rvec.at<double>(2,0));
   //cout << "t=" << t << endl;
-  printf("tvec=[%4.0f,%4.0f,%4.0f]\n",scale*t.at<double>(0,0),scale*t.at<double>(1,0),scale*t.at<double>(2,0));
+  //printf("tvec=[%4.0f,%4.0f,%4.0f]\n",scale*t.at<double>(0,0),scale*t.at<double>(1,0),scale*t.at<double>(2,0));
   
 
 //  cout << R1 << endl;
