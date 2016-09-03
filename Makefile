@@ -13,7 +13,7 @@ surfmovie:surfmovie.cpp Makefile
 siftmovie:siftmovie.cpp Makefile
 	g++ -o siftmovie siftmovie.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
 
-chess:chess.cpp
+chess:chess.cpp Makefile
 	g++ -o chess chess.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
 
 sfmtest:sfmtest.cpp Makefile
@@ -21,3 +21,6 @@ sfmtest:sfmtest.cpp Makefile
 
 opticlflow:opticalflow.cpp Makefile
 	g++ -o opticalflow opticalflow.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+recover3d:recover3d.cpp Makefile
+	g++ -o recover3d recover3d.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
