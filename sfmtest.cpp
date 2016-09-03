@@ -44,14 +44,13 @@ my3dpoint::my3dpoint(){
 
 int main()
 {
+  int point_count = 10;//生成するランダムな３D点の数
 
-  // Example. Estimation of fundamental matrix using the RANSAC algorithm
-  int point_count = 10;
-
-  char file2dv1[20]="test2dv1.dat";
-  char file2dv2[20]="test2dv2.dat";
-  char file2dv3[20]="test2dv3.dat";
-  char file3d[20]  ="test3d.dat";
+  char file3d[20]  ="test3d.dat";//三次元ランダム点座標ファイル
+  char file2dv1[20]="test2dv1.dat";//投影１の点座標ファイル
+  char file2dv2[20]="test2dv2.dat";//投影２の点座標ファイル
+  char file2dv3[20]="test2dv3.dat";//復元した外部パラメータにより再投影した点座標ファイル
+  char file3dres[20]="test3dres.dat";//三次元復元結果座標ファイル
 
   my3dpoint p1[point_count];
   vector<Point2f> points1;
@@ -61,40 +60,39 @@ int main()
 //  vector<Point3f> point3d2(point_count);
   Mat points4d;
   Mat points3d;
+
+  //3D点ベクトル設定
+  for(int i=0; i<point_count; i++){
+    point3d1[i]=Point3f(p1[i].getX(),p1[i].getY(),p1[i].getZ());
+  }
+  //cout << point3d1 << endl;
+
+  //内部パラメータ行列作成
   float fx=300.0;
   float fy=300.0;
   float cx=0.0;
   float cy=0.0;
   Mat K = (Mat_<float>(3,3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
-  //float tx=1,ty=0,tz=0;
-  //Mat R1 = (Mat_<float>(3,4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
-  //Mat R2 = (Mat_<float>(3,4) << 1, 0, 0, tx, 0, 1, 0, ty, 0, 0, 1, tz, 0, 0, 0, 1 );
-
-  for(int i=0; i<point_count; i++){
-    point3d1[i]=Point3f(p1[i].getX(),p1[i].getY(),p1[i].getZ());
-  }
-  //cout << point3d1 << endl;
   
-  
-  float rx=0.0,ry=0*10.0*3.14159/180,rz=0.0;
+  //外部パラメータ行列１作成  
   Mat rvec1=(Mat_<float>(3,1)<<0,0,0);
-  Mat rvec2=(Mat_<float>(3,1)<<rx,ry,rz);
+  Mat tvec1=(Mat_<float>(3,1)<<0,0,0);
 
+  //外部パラメータ行列２作成
+  float rx=0.0,ry=20.0*3.14159/180,rz=5.0*3.14159/180;
   float tx=1000,ty=0,tz=0;
   float scale=sqrt(tx*tx+ty*ty+tz*tz);
-  Mat tvec1=(Mat_<float>(3,1)<<0,0,0);
+  Mat rvec2=(Mat_<float>(3,1)<<rx,ry,rz);
   Mat tvec2=(Mat_<float>(3,1)<<tx,ty,tz);
   
+  //２画面へ透視投影
   Mat distcoef;
-    
-  //透視投影実験
   projectPoints(point3d1,rvec1,tvec1,K,distcoef,points1);
   projectPoints(point3d1,rvec2,tvec2,K,distcoef,points2);
 
   //エッセンシャル行列,Rとt を求める
-  Mat E=findEssentialMat(points1,points2,300.0,Point2d(0,0),RANSAC,0.999,1.0);
   Mat R,t;
-
+  Mat E=findEssentialMat(points1,points2,300.0,Point2d(0,0),RANSAC,0.999,1.0);
   recoverPose(E,points1,points2,R,t,300.0,Point2d(0,0));
 
   //求めたRtを用いて再投影
@@ -127,20 +125,24 @@ int main()
     }
   }
 
-  cout <<"M1=" << M1 << endl;
-  cout <<"R1=" << R1 << endl;
-  cout <<"tvec1="<<tvec1<< endl;
-
-  cout <<"M2=" << M2 << endl;
-  cout <<"R=" << R << endl;
-  cout <<"t="<< t << endl;
+//  cout <<"M1=" << M1 << endl;
+//  cout <<"R1=" << R1 << endl;
+//  cout <<"tvec1="<<tvec1<< endl;
+//  cout <<"M2=" << M2 << endl;
+//  cout <<"R=" << R << endl;
+//  cout <<"t="<< t << endl;
+  
+  M1=K*M1;
+  M2=K*M2;
   
   //三角法で３次元復元  
   triangulatePoints(M1, M2, points1, points2, points4d);
   convertPointsFromHomogeneous(points4d.t(),points3d);
-  //cout<<points4d.col(0).reshape(4.1)<<endl;
-  cout<<(points4d.t())<<endl<<endl;
-  cout<<points3d<<endl;
+  
+  //結果出力
+//  cout<<points4d.t()<<endl<<endl;
+//  cout<<point3d1<<endl<<endl;
+//  cout<<points3d<<endl;
 
 
   //ファイルに記録
@@ -148,9 +150,11 @@ int main()
   ofstream fp2dv2(file2dv2);
   ofstream fp2dv3(file2dv3);
   ofstream fp3d(file3d);
+  ofstream fp3dres(file3dres);
 
   for (int i=0; i<point_count;i++){
-    fp3d<<point3d1[i].x<<" "<<point3d1[i].y<<" "<<point3d1[i].z<<endl;
+    fp3d    << point3d1[i].x << " " <<point3d1[i].y << " " << point3d1[i].z << endl;
+    fp3dres << points3d.at<float>(i,0) << " " <<points3d.at<float>(i,1) << " " << points3d.at<float>(i,2) << endl;
     fp2dv1<<points1[i].x<<" "<<points1[i].y<<endl;
     fp2dv2<<points2[i].x<<" "<<points2[i].y<<endl;
     fp2dv3<<points3[i].x<<" "<<points3[i].y<<endl;

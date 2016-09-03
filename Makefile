@@ -18,3 +18,6 @@ chess:chess.cpp Makefile
 
 sfmtest:sfmtest.cpp Makefile
 	g++ -o sfmtest sfmtest.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+recover3d:recover3d.cpp Makefile
+	g++ -o recover3d recover3d.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
