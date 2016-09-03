@@ -24,3 +24,6 @@ opticlflow:opticalflow.cpp Makefile
 
 recover3d:recover3d.cpp Makefile
 	g++ -o recover3d recover3d.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+featuredetect:featuredetect.cpp Makefile
+	g++ -o featuredetect featuredetect.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`

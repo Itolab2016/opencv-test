@@ -1,3 +1,4 @@
+#特徴量抽出サンプル
 #include <stdio.h>
 #include <iostream>
 #include "opencv2/core.hpp"
@@ -6,6 +7,7 @@
 #include "opencv2/xfeatures2d.hpp"
 #include "opencv2/highgui.hpp"
 
+using namespace std;
 using namespace cv;
 using namespace cv::xfeatures2d;
 
@@ -19,21 +21,39 @@ int main()
     return -1;
   }
 
-  while(1){
+  for(;;/*int i=0; i<1;i++*/){
     Mat orig,frame;
     cap >> orig;
     resize(orig,frame,Size(),0.7,0.7);
 
+// SIFTまたはSURFを使う場合はこれを呼び出す．
+// //cv::initModule_nonfree(); 
+// FeatureDetectorオブジェクトの生成
+  Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
+// 特徴点情報を格納するための変数
+  vector<KeyPoint> keypoints;
+  Mat img_keypoints;
+// 特徴点抽出の実行
+  detector->detect(frame, keypoints);
+  drawKeypoints( frame, keypoints, img_keypoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
+
+
+#if 0    
     //-- Step 1: Detect the keypoints using SURF Detector
     int minHessian = 4000;
     Ptr<SURF> detector = SURF::create( minHessian );
+
     std::vector<KeyPoint> keypoints;
-    detector->detect( frame, keypoints );
+    Mat mask,discripter;
+
+    detector->detectAndCompute( frame, mask, keypoints, discripter, false );
+
+    cout << discripter << endl;
 
     //-- Draw keypoints
     Mat img_keypoints;
     drawKeypoints( frame, keypoints, img_keypoints, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
-
+#endif
     //-- Show detected (drawn) keypoints
     imshow("Keypoints", img_keypoints );
 
