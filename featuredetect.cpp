@@ -75,8 +75,6 @@ int main()
   detector->detectAndCompute(frame[0],noArray(), keypoints1, descriptors1);
   detector->detectAndCompute(frame[1],noArray(), keypoints2, descriptors2);
   //cout<< descriptors <<endl<<endl;
-  drawKeypoints( frame[0], keypoints1, img_keypoints1, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
-  drawKeypoints( frame[1], keypoints2, img_keypoints2, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
 
   //特徴量マッチング
   //タイプ  手法
@@ -98,9 +96,49 @@ int main()
   //descriptor-A: query画像
   ////descriptor-B: train画像
 
+  cout << "size="       << matches.size()         << endl;   
+
+//  cout << "match.size=" << matches[1].size()      << endl;
+//  cout << "queryIdx="   << matches[1][0].queryIdx << endl;
+//  cout << "trainIdx="   << matches[1][0].trainIdx << endl;
+//  cout << "imgIdx="     << matches[1][0].imgIdx   << endl;
+//  cout << "distance="   << matches[1][0].distance << endl << endl;
+
+//  cout << "match.size=" << matches[1].size()      << endl;
+//  cout << "queryIdx="   << matches[1][1].queryIdx << endl;
+//  cout << "trainIdx="   << matches[1][1].trainIdx << endl;
+//  cout << "imgIdx="     << matches[1][1].imgIdx   << endl;
+//  cout << "distance="   << matches[1][1].distance << endl;
+
+  vector<DMatch> bestMatches;
+  vector<KeyPoint> bestkey1,bestkey2;
+  Mat outImg;
+
+  float match_par = .5f; //対応点のしきい値
+  for (int i=0; i<matches.size(); i++){
+    float dist1 = matches[i][0].distance;
+    float dist2 = matches[i][1].distance;
+    //良い点を残す（最も類似する点と次に類似する点の類似度から）
+    if (dist1 <= dist2 * match_par && dist1<=0.2f) {
+      //cout << dist1 <<",";
+      bestMatches.push_back(matches[i][0]);
+      bestkey1.push_back(keypoints1[matches[i][0].queryIdx]);
+      bestkey2.push_back(keypoints2[matches[i][0].trainIdx]);
+    }
+  }
+  cout<<endl;
+  cout << "BestMatch=" << bestkey1.size() << endl;
+
+
+  //drawKeypoints( frame[0], bestkey1, img_keypoints1, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+  //drawKeypoints( frame[1], bestkey2, img_keypoints2, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+  drawMatches( frame[0], keypoints1, frame[1], keypoints2, bestMatches, outImg, Scalar::all(-1), Scalar(127,127,127,255), vector<char>(), DrawMatchesFlags::DEFAULT);
+
   //-- Show detected (drawn) keypoints
-  imshow("Keypoints1", img_keypoints1 );
-  imshow("Keypoints2", img_keypoints2 );
+  //imshow("Keypoints1", img_keypoints1 );
+  //imshow("Keypoints2", img_keypoints2 );
+  imshow("Matches",outImg);
 
   for(;;){
     int key = waitKey(1);

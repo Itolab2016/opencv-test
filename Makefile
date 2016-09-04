@@ -27,3 +27,6 @@ recover3d:recover3d.cpp Makefile
 
 featuredetect:featuredetect.cpp Makefile
 	g++ -o featuredetect featuredetect.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+viztest:viztest.cpp Makefile
+	g++ -o viztest viztest.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
