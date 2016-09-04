@@ -30,3 +30,6 @@ featuredetect:featuredetect.cpp Makefile
 
 viztest:viztest.cpp Makefile
 	g++ -o viztest viztest.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+calib:calibration.cpp Makefile
+	g++ -o calibration calibration.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
