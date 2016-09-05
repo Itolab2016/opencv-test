@@ -33,3 +33,6 @@ viztest:viztest.cpp Makefile
 
 calib:calibration.cpp Makefile
 	g++ -o calibration calibration.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+realfeature:realfeature.cpp Makefile
+	g++ -o realfeature realfeature.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
