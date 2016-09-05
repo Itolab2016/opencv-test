@@ -1,8 +1,8 @@
 //三次元復元研究用プログラム
-//乱数で人工的に点群を作成し，平面に透視投影し
-//２枚の透視投影画像から回転量と移動量を求める（２０１６．８．３０）
+//廊下画像　img/img????.pngを三次元復元するプロトタイププログラム（２０１６．９．６製作開始！）
 //
-//２枚の画像から３次元点を復元するのに成功（２０１６．９．３）
+//copyright Kouhei Ito @ Kanazawa ,Japan
+//
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -70,6 +70,7 @@ int main()
   //内部パラメータ行列作成
   float fx=300.0;
   float fy=300.0;
+  float focal = 300.0;
   float cx=0.0;
   float cy=0.0;
   Mat K = (Mat_<float>(3,3) << fx, 0, cx, 0, fy, cy, 0, 0, 1);
@@ -85,18 +86,96 @@ int main()
   Mat rvec2=(Mat_<float>(3,1)<<rx,ry,rz);
   Mat tvec2=(Mat_<float>(3,1)<<tx,ty,tz);
   
-  //２画面へ透視投影
-  Mat distcoef;
-  projectPoints(point3d1,rvec1,tvec1,K,distcoef,points1);
-  projectPoints(point3d1,rvec2,tvec2,K,distcoef,points2);
+ 
+  //改造のポイント
+  //points1,points2の実画像の特徴点のキーポイントを入れれば良い
+  int frn=0;
+  char str[50];
+  Mat orig;
+  Mat frame[2];
+
+    cout << "ImgNo=" << frn << "," << frn+1 << endl;
+    sprintf(str,"img/img%04d.png",frn);
+    orig = imread(str, IMREAD_COLOR);
+    resize(orig,frame[0],Size(),0.5,0.5);
+
+    sprintf(str,"img/img%04d.png",frn+1);
+    orig = imread(str, IMREAD_COLOR);
+    resize(orig,frame[1],Size(),0.5,0.5);
+ 
+    Ptr<SURF> detector = SURF::create();
+    // 特徴点情報を格納するための変数
+    vector<KeyPoint> keypoints1,keypoints2;
+    Mat descriptors1,descriptors2;
+    Mat img_keypoints1,img_keypoints2;
+    // 特徴点抽出の実行
+    detector->detectAndCompute(frame[0],noArray(), keypoints1, descriptors1);
+    detector->detectAndCompute(frame[1],noArray(), keypoints2, descriptors2);
+    
+    //特徴量マッチング
+    //タイプ  手法
+    //BruteForce  L2ノルム・全探索
+    //BruteForce-L1 L1ノルム・全探索
+    //BruteForce-Hamming  ハミング距離・全探索
+    //BruteForce-Hamming(2) ハミング距離・全探索
+    //FlannBased  flann・最近傍探索
+    //
+    //メソッド  手法
+    //match 最も良い点を探す
+    //knnMatch  上位k個の良い点を探す
+    //radiusMatch 特徴量記述の空間で距離がしきい値以下の点を探す
+
+
+    Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create("BruteForce");
+    vector< vector<DMatch> > matches;
+    matcher->knnMatch(descriptors1, descriptors2, matches, 2); //上位2位までの点を探す
+
+    cout << "size="       << matches.size()         << endl;   
+
+    //  cout << "match.size=" << matches[1].size()      << endl;
+    //  cout << "queryIdx="   << matches[1][0].queryIdx << endl;
+    //  cout << "trainIdx="   << matches[1][0].trainIdx << endl;
+    //  cout << "imgIdx="     << matches[1][0].imgIdx   << endl;
+    //  cout << "distance="   << matches[1][0].distance << endl << endl;
+
+    //  cout << "match.size=" << matches[1].size()      << endl;
+    //  cout << "queryIdx="   << matches[1][1].queryIdx << endl;
+    //  cout << "trainIdx="   << matches[1][1].trainIdx << endl;
+    //  cout << "imgIdx="     << matches[1][1].imgIdx   << endl;
+    //  cout << "distance="   << matches[1][1].distance << endl;
+
+    vector<DMatch> bestMatches;
+    vector<KeyPoint> bestkey1,bestkey2;
+    Mat outImg;
+
+    float match_par = .5f; //対応点のしきい値
+    for (int i=0; i<matches.size(); i++){
+      float dist1 = matches[i][0].distance;
+      float dist2 = matches[i][1].distance;
+      //良い点を残す（最も類似する点と次に類似する点の類似度から）
+      if (dist1 <= dist2 * match_par && dist1<=0.2f) {
+        //cout << dist1 <<",";
+        bestMatches.push_back(matches[i][0]);
+        bestkey1.push_back(keypoints1[matches[i][0].queryIdx]);
+        bestkey2.push_back(keypoints2[matches[i][0].trainIdx]);
+      }
+    }
+    cout << "BestMatch=" << bestkey1.size() << endl;
+    cout<<endl;
+
+
+    //drawKeypoints( frame[0], bestkey1, img_keypoints1, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+    //drawKeypoints( frame[1], bestkey2, img_keypoints2, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+    drawMatches( frame[0], keypoints1, frame[1], keypoints2, bestMatches, outImg, Scalar::all(-1), Scalar(127,127,127,255), vector<char>(), DrawMatchesFlags::DEFAULT);
+
 
   //エッセンシャル行列,Rとt を求める
-  Mat R,t;
-  Mat E=findEssentialMat(points1,points2,300.0,Point2d(0,0),RANSAC,0.999,1.0);
-  recoverPose(E,points1,points2,R,t,300.0,Point2d(0,0));
-
-  //求めたRtを用いて再投影
-  projectPoints(point3d1,R,scale*t,K,distcoef,points3);
+  Mat R,t,mask,distcoef;
+  Mat E=findEssentialMat(bestkey1,bestkey2,focal,Point2d(cx,cy),RANSAC,0.999,1.0,mask);
+  recoverPose(E,bestkey1,bestkey2,R,t,focal,Point2d(cx,cy),mask);
+  t =t*scale;
+  projectPoints(point3d1,R,t,K,distcoef,points3);
 
   //３次元復元
   //triangulatePoints(InputArray projMatr1, InputArray projMatr2, InputArray projPoints1, InputArray projPoints2, OutputArray points4D);
@@ -148,7 +227,6 @@ int main()
   //ファイルに記録
   ofstream fp2dv1(file2dv1);
   ofstream fp2dv2(file2dv2);
-  ofstream fp2dv3(file2dv3);
   ofstream fp3d(file3d);
   ofstream fp3dres(file3dres);
 
@@ -157,90 +235,7 @@ int main()
     fp3dres << points3d.at<float>(i,0) << " " <<points3d.at<float>(i,1) << " " << points3d.at<float>(i,2) << endl;
     fp2dv1<<points1[i].x<<" "<<points1[i].y<<endl;
     fp2dv2<<points2[i].x<<" "<<points2[i].y<<endl;
-    fp2dv3<<points3[i].x<<" "<<points3[i].y<<endl;
   }  
 
 
-
-  //Mat R2;
-  //Rodrigues(rvec2,R2);  
-  //cout << "R=" << R <<endl<<endl;
-  //cout << "R2=" << R2 <<endl<<endl;
-
-  //cout << "rvec=" << rvec << endl <<endl;
-  //printf("Rvec=[%8.3f,%8.3f,%8.3f]\n",rvec.at<double>(0,0),rvec.at<double>(1,0),rvec.at<double>(2,0));
-  //cout << "t=" << t << endl;
-  //printf("tvec=[%4.0f,%4.0f,%4.0f]\n",scale*t.at<double>(0,0),scale*t.at<double>(1,0),scale*t.at<double>(2,0));
-  
-
-//  cout << R1 << endl;
-//  cout << K*R2 << endl;
-//  for (int i=0;i<100;i++){
-//    p1[i].dispnobr();
-//  }
-
-#if 0
-  // initialize the points here ... */
-  for( int i = 0; i < point_count; i++ )
-  {
-    points1[i] = ...;
-    points2[i] = ...;
-  }
-
-  double focal = 1.0;
-  cv::Point2d pp(0.0, 0.0);
-  Mat E, R, t, mask;
-
-  E = findEssentialMat(points1, points2, focal, pp, RANSAC, 0.999, 1.0, mask);
-  recoverPose(E, points1, points2, R, t, focal, pp, mask);
-
-
-///////////////////////////////
-
-  Mat img_1 = imread("lena_std.tif", IMREAD_GRAYSCALE );
-  Mat img_2 = imread("lena_std.tif", IMREAD_GRAYSCALE );
-  if( !img_1.data || !img_2.data )
-  { 
-    std::cout<< " --(!) Error reading images " << std::endl; return -1; 
-  }
-
-  // 回転： -40 [deg],  スケーリング： 1.0 [倍]
-  float angle = -40.0, scale = 1.0;
-  //     // 中心：画像中心
-  Point2f center(img_2.cols*0.5, img_2.rows*0.5);
-  // 以上の条件から2次元の回転行列を計算
-  const Mat affine_matrix = getRotationMatrix2D( center, angle, scale );
-  //アフィン変換
-  Mat dst_img;
-  warpAffine(img_2, dst_img, affine_matrix, img_2.size());
-
-
-
-  //-- Step 1: Detect the keypoints using SURF Detector
-  int minHessian = 2500;
-  Ptr<SURF> detector = SURF::create( minHessian );
-  std::vector<KeyPoint> keypoints_1, keypoints_2;
-  detector->detect( img_1, keypoints_1 );
-  detector->detect( dst_img, keypoints_2 );
-  std::cout<< keypoints_1[0].pt <<std::endl;
-
-
-  //-- Draw keypoints
-  Mat img_keypoints_1; Mat img_keypoints_2;
-  drawKeypoints( img_1, keypoints_1, img_keypoints_1, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
-  drawKeypoints( dst_img, keypoints_2, img_keypoints_2, Scalar::all(-1), DrawMatchesFlags::DEFAULT );
-  
-  //-- Show detected (drawn) keypoints
-  imshow("Keypoints 1", img_keypoints_1 );
-  imshow("Keypoints 2", img_keypoints_2 );
-  
-  while(1){
-    int key = waitKey(1);
-    if(key == 113)//qボタンが押されたとき
-    {
-      return 0;
-    }
-  }
-  return 0;
-#endif 
 }
