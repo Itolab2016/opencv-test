@@ -36,3 +36,6 @@ calib:calibration.cpp Makefile
 
 realfeature:realfeature.cpp Makefile
 	g++ -o realfeature realfeature.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
+
+real3dreconstruction:real3dreconstruction.cpp Makefile
+	g++ -o real3dreconstruction real3dreconstruction.cpp `pkg-config --cflags opencv` `pkg-config --libs opencv`
